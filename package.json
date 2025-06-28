@@ -1,0 +1,91 @@
+{
+  "name": "gemini-ai-agent",
+  "version": "1.0.0",
+  "description": "A reusable AI agent package for multimodal interactions with Google's Gemini API",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "build:watch": "vite build --watch",
+    "dev": "vite",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "prepublishOnly": "npm run build",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "gemini",
+    "ai",
+    "agent",
+    "multimodal",
+    "voice",
+    "video",
+    "react",
+    "websocket"
+  ],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/gemini-ai-agent.git"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.esm.js",
+      "require": "./dist/react.js"
+    },
+    "./shared/audio-recorder": {
+      "types": "./dist/shared/audio-recorder.d.ts",
+      "import": "./dist/shared/audio-recorder.esm.js",
+      "require": "./dist/shared/audio-recorder.js"
+    },
+    "./shared/audio-streamer": {
+      "types": "./dist/shared/audio-streamer.d.ts",
+      "import": "./dist/shared/audio-streamer.esm.js",
+      "require": "./dist/shared/audio-streamer.js"
+    },
+    "./shared/media-handler": {
+      "types": "./dist/shared/media-handler.d.ts",
+      "import": "./dist/shared/media-handler.esm.js",
+      "require": "./dist/shared/media-handler.js"
+    }
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.29.0",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
+    "eslint": "^9.29.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.2.0",
+    "vite": "^7.0.0",
+    "vite-tsconfig-paths": "^5.1.4"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "eventemitter3": "^5.0.1"
+  }
+}
