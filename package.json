@@ -16,7 +16,7 @@
     "dev": "vite",
     "test": "jest",
     "test:watch": "jest --watch",
-    "prepublishOnly": "npm run build",
+    "prepare": "npm run build",
     "clean": "rimraf dist"
   },
   "keywords": [
