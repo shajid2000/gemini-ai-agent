@@ -16,6 +16,7 @@ export function useGeminiAgent(config) {
   const [isVideoActive, setIsVideoActive] = useState(false);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+   const [isAudioReady, setIsAudioReady] = useState(false);
 
   // Initialize agent
   useEffect(() => {
@@ -49,6 +50,10 @@ export function useGeminiAgent(config) {
 
         agentRef.current.on('muteToggled', (muted) => {
           setIsMuted(muted);
+        });
+
+        agentRef.current.on('audioPlaying', () => {
+          setIsAudioReady(true);
         });
 
         agentRef.current.on('videoStarted', () => {

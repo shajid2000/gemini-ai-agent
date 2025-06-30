@@ -26,6 +26,7 @@ export class GeminiAIAgent extends EventEmitter {
     this.isConnected = false;
     this.isMuted = false;
     this.isVideoActive = false;
+    this.isAudioInitialized = false;
     
     // Setup endpoint
     this.endpoint = `wss://${this.host}/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${this.apiKey}`;
@@ -36,7 +37,7 @@ export class GeminiAIAgent extends EventEmitter {
    */
   async initialize() {
     try {
-      await this._initializeAudio();
+      
       await this._initializeWebSocket();
       this.emit('initialized');
       return true;
@@ -53,6 +54,10 @@ export class GeminiAIAgent extends EventEmitter {
     if (this.isRecording) return false;
     
     try {
+
+      const audioReady = await this._initializeAudioIfNeeded();
+      if (!audioReady) return false;
+
       if (!this.isConnected) {
         await this._reconnect();
       }
@@ -224,33 +229,55 @@ export class GeminiAIAgent extends EventEmitter {
         this.ws.close();
       }
 
-      if (this.audioContext && this.audioContext.state === "closed") {
+      if (this.audioContext && this.audioContext.state !== 'closed') {
         this.audioContext.close();
       }
 
       this.isConnected = false;
+       this.isAudioInitialized = false;
       this.emit('disconnected');
     } catch (error) {
       this.emit('error', error);
     }
   }
 
+    /**
+   * Initialize audio context (called on first audio operation)
+   */
+  async _initializeAudioIfNeeded() {
+    if (this.isAudioInitialized) return true;
+    
+    try {
+      await this._initializeAudio();
+      this.isAudioInitialized = true;
+      return true;
+    } catch (error) {
+      this.emit('error', error);
+      return false;
+    }
+  }
+
   // Private methods
   async _initializeAudio() {
     try {
+      // Check if we already have an audio context
+      if (this.audioContext && this.audioContext.state !== 'closed') {
+        if (this.audioContext.state === 'suspended') {
+          await this.audioContext.resume();
+        }
+        return;
+      }
+
       this.audioContext = new (window.AudioContext || window.webkitAudioContext)({ 
         sampleRate: 24000 
       });
-      console.log("_initializeAudio",this.audioContext);
-       console.log(" before resume");
+      
       if (this.audioContext.state === 'suspended') {
         await this.audioContext.resume();
       }
- console.log("after resume");
+
       const { AudioStreamer } = await import('./shared/audio-streamer.js');
       this.audioStreamer = new AudioStreamer(this.audioContext);
-      console.log(this);
-      
     } catch (error) {
       throw new Error(`Audio initialization failed: ${error.message}`);
     }
@@ -259,6 +286,7 @@ export class GeminiAIAgent extends EventEmitter {
   async _initializeWebSocket() {
     return new Promise((resolve, reject) => {
       try {
+        
         this.ws = new WebSocket(this.endpoint);
         
         this.ws.onopen = () => {
@@ -274,7 +302,6 @@ export class GeminiAIAgent extends EventEmitter {
           wsResponse = JSON.parse(event.data);
         }
 
-        // console.log('WebSocket Response:', wsResponse);
           await this._handleMessage(wsResponse);
         };
 
@@ -284,6 +311,8 @@ export class GeminiAIAgent extends EventEmitter {
         };
 
         this.ws.onerror = (error) => {
+          console.log("socket erro",error);
+          
           reject(error);
         };
 
@@ -294,6 +323,7 @@ export class GeminiAIAgent extends EventEmitter {
         };
 
       } catch (error) {
+        log(error,"on socket error")
         reject(error);
       }
     });
@@ -369,12 +399,20 @@ export class GeminiAIAgent extends EventEmitter {
       this.emit('turnComplete');
       this.audioStreamer?.complete();
     }
+
+
+    if (message.toolCall && message.toolCall?.functionCalls){
+        for (let i of message.toolCall.functionCalls)
+          await this._handleToolCall(i);
+    }
+       
   }
 
   async _handleToolCall(functionCall) {
     this.emit('toolCall', functionCall);
     
     // Find and execute the tool handler
+    
     const tool = this.tools.find(t => t.definition.name === functionCall.name);
     if (tool && tool.handler) {
       try {
@@ -444,7 +482,7 @@ export class GeminiAIAgent extends EventEmitter {
 
   async _playAudioChunk(base64AudioChunk) {
     try {
-        
+       await this._initializeAudioIfNeeded(); 
       const arrayBuffer = this._base64ToArrayBuffer(base64AudioChunk);
       const uint8Array = new Uint8Array(arrayBuffer);
       this.audioStreamer.addPCM16(uint8Array);
