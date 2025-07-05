@@ -173,14 +173,24 @@ export class GeminiAIAgent extends EventEmitter {
     if (!this.isConnected) return false;
 
     try {
-      const message = {
-        realtimeInput: {
-          mediaChunks: [{
-            mimeType: "text/plain",
-            data: btoa(text)
-          }]
-        }
-      };
+      // const message = {
+      //   realtimeInput: {
+      //     mediaChunks: [{
+      //       mimeType: "text/plain",
+      //       data: btoa(text)
+      //     }]
+      //   }
+      // };
+
+        const message = {
+            client_content: {
+              turns: [{
+                role: "user",
+                parts: [{ text: text }]
+              }],
+              turn_complete: true
+            }
+          };  
       this.ws.send(JSON.stringify(message));
       this.emit('messageSent', text);
       return true;

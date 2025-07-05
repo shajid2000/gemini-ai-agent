@@ -17,6 +17,7 @@ export function useGeminiAgent(config) {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
    const [isAudioReady, setIsAudioReady] = useState(false);
+   const initMessageFlag = useRef(false)
 
   // Initialize agent
   useEffect(() => {
@@ -41,6 +42,14 @@ export function useGeminiAgent(config) {
 
         agentRef.current.on('recordingStarted', () => {
           setIsRecording(true);
+                if(config.sendInitAudioChunk && !initMessageFlag.current){
+                  agentRef.current._sendAudioChunk(config.sendInitAudioChunk)
+                  initMessageFlag.current = true
+                }
+                else if(config.sendInitText && !initMessageFlag.current){
+                  agentRef.current.sendTextMessage(config.sendInitText)
+                  initMessageFlag.current = true
+                }
         });
 
         agentRef.current.on('recordingStopped', () => {
